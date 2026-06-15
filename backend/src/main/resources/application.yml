@@ -4,8 +4,8 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/lead_management
-    username: careco
-    password: careco
+    username:
+    password:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -26,4 +26,6 @@ app:
     secure: false
     same-site: lax
     domain: localhost
+  scheduler:
+    token-cleanup-cron: "0 0 * * * *"
 
