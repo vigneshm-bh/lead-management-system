@@ -4,8 +4,8 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/lead_management
-    username: postgres
-    password: postgres
+    username:
+    password:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -20,5 +20,10 @@ spring:
 app:
   jwt:
     secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgSldUIHRva2VuIGdlbmVyYXRpb24gMTIzNDU2Nzg5MA==
-    expiration-ms: 86400000
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+  cookie:
+    secure: false
+    same-site: lax
+    domain: localhost
 

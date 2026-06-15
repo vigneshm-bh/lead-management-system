@@ -14,19 +14,19 @@ import java.util.Date;
 public class JwtUtil {
 
     private final SecretKey secretKey;
-    private final long expirationMs;
+    private final long accessTokenExpirationMs;
 
     public JwtUtil(@Value("${app.jwt.secret}") String secret,
-                   @Value("${app.jwt.expiration-ms}") long expirationMs) {
+                   @Value("${app.jwt.access-token-expiration-ms}") long accessTokenExpirationMs) {
         this.secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
-        this.expirationMs = expirationMs;
+        this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpirationMs))
                 .signWith(secretKey)
                 .compact();
     }
@@ -51,5 +51,8 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-}
 
+    public long getAccessTokenExpirationMs() {
+        return accessTokenExpirationMs;
+    }
+}
