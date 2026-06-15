@@ -3,6 +3,8 @@ package com.leadmanagement.controller;
 import com.leadmanagement.dto.AuthRequest;
 import com.leadmanagement.dto.AuthResponse;
 import com.leadmanagement.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +18,34 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRequest request,
+                                                  HttpServletResponse response) {
+        return ResponseEntity.ok(authService.register(request, response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request,
+                                               HttpServletResponse response) {
+        return ResponseEntity.ok(authService.login(request, response));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest request,
+                                                 HttpServletResponse response) {
+        return ResponseEntity.ok(authService.refresh(request, response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request,
+                                        HttpServletResponse response) {
+        authService.logout(request, response);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me(HttpServletRequest request) {
+        // This endpoint is protected - if we reach here, user is authenticated
+        String username = request.getUserPrincipal().getName();
+        return ResponseEntity.ok(new AuthResponse(username));
     }
 }
-
