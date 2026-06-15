@@ -2,6 +2,7 @@ package com.leadmanagement.controller;
 
 import com.leadmanagement.dto.AuthRequest;
 import com.leadmanagement.dto.AuthResponse;
+import com.leadmanagement.dto.LoginRequest;
 import com.leadmanagement.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request,
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                                HttpServletResponse response) {
         return ResponseEntity.ok(authService.login(request, response));
     }
@@ -44,7 +45,6 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me(HttpServletRequest request) {
-        // This endpoint is protected - if we reach here, user is authenticated
         String username = request.getUserPrincipal().getName();
         return ResponseEntity.ok(new AuthResponse(username));
     }

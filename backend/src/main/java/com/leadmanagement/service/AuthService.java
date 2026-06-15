@@ -2,6 +2,7 @@ package com.leadmanagement.service;
 
 import com.leadmanagement.dto.AuthRequest;
 import com.leadmanagement.dto.AuthResponse;
+import com.leadmanagement.dto.LoginRequest;
 import com.leadmanagement.entity.RefreshToken;
 import com.leadmanagement.entity.User;
 import com.leadmanagement.enums.Role;
@@ -57,7 +58,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse login(AuthRequest request, HttpServletResponse response) {
+    public AuthResponse login(LoginRequest request, HttpServletResponse response) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
@@ -80,7 +81,6 @@ public class AuthService {
             throw new RuntimeException("Refresh token expired");
         }
 
-        // Delete old refresh token and issue new one (token rotation)
         refreshTokenRepository.delete(refreshToken);
 
         return generateTokensAndSetCookies(refreshToken.getUsername(), response);
@@ -100,7 +100,6 @@ public class AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         String accessToken = jwtUtil.generateAccessToken(userDetails);
 
-        // Create refresh token
         String refreshTokenValue = UUID.randomUUID().toString();
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(refreshTokenValue)
@@ -109,7 +108,6 @@ public class AuthService {
                 .build();
         refreshTokenRepository.save(refreshToken);
 
-        // Set cookies
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshTokenValue);
 

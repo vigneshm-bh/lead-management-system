@@ -35,7 +35,5 @@ export interface DashboardData {
 }
 
 export interface AuthResponse {
-  token: string;
   username: string;
 }
-

@@ -1,10 +1,13 @@
 /** @jsxImportSource @emotion/react */
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { leadApi } from '../services/api';
-import { Lead, LeadStatus } from '../types';
+import { LeadStatus } from '../types';
 import { Badge, Button, Card, Container, Input, Select, Table, colors } from '../styles/shared';
+import Spinner from '../components/Spinner';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Header = styled.div`
   display: flex;
@@ -55,37 +58,30 @@ const statusColors: Record<string, string> = {
 };
 
 const LeadsPage: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadLeads();
-  }, [search, statusFilter]);
+  const { data: leads = [], isLoading, isFetching } = useQuery({
+    queryKey: ['leads', search, statusFilter],
+    queryFn: () =>
+      leadApi.getAll(search || undefined, (statusFilter as LeadStatus) || undefined).then((res) => res.data),
+  });
 
-  const loadLeads = async () => {
-    try {
-      const response = await leadApi.getAll(
-        search || undefined,
-        (statusFilter as LeadStatus) || undefined
-      );
-      setLeads(response.data);
-    } catch (error) {
-      console.error('Failed to load leads', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => leadApi.delete(id),
+    onSuccess: () => {
+      setDeleteId(null);
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this lead?')) return;
-    try {
-      await leadApi.delete(id);
-      setLeads(leads.filter((l) => l.id !== id));
-    } catch (error) {
-      console.error('Failed to delete lead', error);
+  const handleDelete = () => {
+    if (deleteId !== null) {
+      deleteMutation.mutate(deleteId);
     }
   };
 
@@ -111,11 +107,6 @@ const LeadsPage: React.FC = () => {
       </Filters>
 
       <Card style={{ padding: 0, overflow: 'auto' }}>
-        {loading ? (
-          <EmptyState>Loading...</EmptyState>
-        ) : leads.length === 0 ? (
-          <EmptyState>No leads found. Create your first lead!</EmptyState>
-        ) : (
           <Table>
             <thead>
               <tr>
@@ -128,6 +119,11 @@ const LeadsPage: React.FC = () => {
                 <th>Actions</th>
               </tr>
             </thead>
+            {isFetching || isLoading ? (
+              <tbody><tr><td colSpan={7}><Spinner/></td></tr></tbody>
+            ) : leads.length === 0 ? (
+              <tbody><tr><td colSpan={7}><EmptyState>No leads found. Create your first lead!</EmptyState></td></tr></tbody>
+            ) : (
             <tbody>
               {leads.map((lead) => (
                 <tr key={lead.id}>
@@ -144,7 +140,7 @@ const LeadsPage: React.FC = () => {
                       <Button variant="secondary" onClick={() => navigate(`/leads/${lead.id}/edit`)}>
                         Edit
                       </Button>
-                      <Button variant="danger" onClick={() => handleDelete(lead.id)}>
+                      <Button variant="danger" onClick={() => setDeleteId(lead.id)} disabled={deleteMutation.isPending}>
                         Delete
                       </Button>
                     </Actions>
@@ -152,12 +148,21 @@ const LeadsPage: React.FC = () => {
                 </tr>
               ))}
             </tbody>
+            )}
           </Table>
-        )}
       </Card>
+
+      <ConfirmModal
+        isOpen={deleteId !== null}
+        title="Delete Lead"
+        message="Are you sure you want to delete this lead? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleteMutation.isPending}
+      />
     </Container>
   );
 };
 
 export default LeadsPage;
-

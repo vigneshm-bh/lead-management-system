@@ -12,8 +12,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@tanstack/react-query": "^5.101.0",
     "axios": "^1.18.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -22,8 +24,8 @@
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "typescript": "^6.0.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
     "vite": "^5.4.21"
   }
 }

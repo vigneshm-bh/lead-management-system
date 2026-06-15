@@ -51,18 +51,50 @@ const ToggleText = styled.p`
   }
 `;
 
+const FieldError = styled.span`
+  color: ${colors.danger};
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+`;
+
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
+  const validate = (): boolean => {
+    const errors: { username?: string; password?: string } = {};
+
+    if (!username.trim()) {
+      errors.username = 'Username is required';
+    } else if (username.length < 3 || username.length > 50) {
+      errors.username = 'Username must be between 3 and 50 characters';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      errors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    } else if (password.length > 100) {
+      errors.password = 'Password must not exceed 100 characters';
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!isLogin && !validate()) return;
     setLoading(true);
     try {
       if (isLogin) {
@@ -72,7 +104,12 @@ const LoginPage: React.FC = () => {
       }
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      const data = err.response?.data;
+      if (data?.errors) {
+        setError(Object.values(data.errors).join(', '));
+      } else {
+        setError(data?.message || 'Something went wrong');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,20 +127,20 @@ const LoginPage: React.FC = () => {
             <Input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => { setUsername(e.target.value); setFieldErrors((f) => ({ ...f, username: undefined })); }}
               placeholder="Enter username"
-              required
             />
+            {fieldErrors.username && <FieldError>{fieldErrors.username}</FieldError>}
           </FormGroup>
           <FormGroup>
             <label>Password</label>
             <Input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((f) => ({ ...f, password: undefined })); }}
               placeholder="Enter password"
-              required
             />
+            {fieldErrors.password && <FieldError>{fieldErrors.password}</FieldError>}
           </FormGroup>
           <Button type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
             {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Sign Up'}
@@ -111,7 +148,7 @@ const LoginPage: React.FC = () => {
         </form>
         <ToggleText>
           {isLogin ? "Don't have an account? " : 'Already have an account? '}
-          <span onClick={() => { setIsLogin(!isLogin); setError(''); }}>
+          <span onClick={() => { setIsLogin(!isLogin); setError(''); setFieldErrors({}); }}>
             {isLogin ? 'Sign Up' : 'Sign In'}
           </span>
         </ToggleText>

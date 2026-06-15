@@ -1,9 +1,11 @@
 /** @jsxImportSource @emotion/react */
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
+import { useQuery } from '@tanstack/react-query';
 import { leadApi } from '../services/api';
-import { DashboardData, LeadStatus } from '../types';
+import { LeadStatus } from '../types';
 import { Card, colors, Container } from '../styles/shared';
+import Spinner from '../components/Spinner';
 
 const Grid = styled.div`
   display: grid;
@@ -43,25 +45,13 @@ const statusColors: Record<string, string> = {
 };
 
 const DashboardPage: React.FC = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => leadApi.getDashboard().then((res) => res.data),
+  });
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
-    try {
-      const response = await leadApi.getDashboard();
-      setData(response.data);
-    } catch (error) {
-      console.error('Failed to load dashboard', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) return <Container><p>Loading...</p></Container>;
+  if (isLoading) return <Spinner text="Loading dashboard..." />;
+  if (error) return <Container><p>Failed to load dashboard.</p></Container>;
 
   return (
     <Container>
@@ -83,4 +73,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
-

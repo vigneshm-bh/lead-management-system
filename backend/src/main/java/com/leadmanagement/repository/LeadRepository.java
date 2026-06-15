@@ -13,9 +13,9 @@ import java.util.List;
 public interface LeadRepository extends JpaRepository<Lead, Long> {
 
     @Query("SELECT l FROM Lead l WHERE " +
-            "(:search IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(l.company) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "OR LOWER(l.email) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+            "(:search IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+            "OR LOWER(l.company) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%')) " +
+            "OR LOWER(l.email) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
             "AND (:status IS NULL OR l.status = :status)")
     List<Lead> searchLeads(@Param("search") String search, @Param("status") LeadStatus status);
 
