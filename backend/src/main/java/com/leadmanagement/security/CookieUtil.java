@@ -21,13 +21,16 @@ public class CookieUtil {
     @Value("${app.cookie.secure}")
     private boolean secure;
 
+    @Value("${app.cookie.same-site:Lax}")
+    private String sameSite;
+
     public void addAccessTokenCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(secure)
                 .path("/")
                 .maxAge(accessTokenExpirationMs / 1000)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
@@ -38,7 +41,7 @@ public class CookieUtil {
                 .secure(secure)
                 .path("/api/auth")
                 .maxAge(refreshTokenExpirationMs / 1000)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
@@ -49,7 +52,7 @@ public class CookieUtil {
                 .secure(secure)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
@@ -58,7 +61,7 @@ public class CookieUtil {
                 .secure(secure)
                 .path("/api/auth")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
     }

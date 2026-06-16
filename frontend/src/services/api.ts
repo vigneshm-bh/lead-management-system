@@ -2,7 +2,7 @@ import axios from 'axios';
 import { AuthResponse, DashboardData, Lead, LeadRequest, LeadStatus } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
 });
 
@@ -42,7 +42,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        await api.post('/auth/refresh');
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {

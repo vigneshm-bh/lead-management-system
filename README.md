@@ -143,3 +143,67 @@ No authentication required to view the docs.
 | `status` | string | Filter by status (NEW, CONTACTED, etc.) |
 
 ---
+
+## Deployment (Neon + Render + Vercel)
+
+### Step 1: Database (Neon)
+
+1. Go to [neon.tech](https://neon.tech) and create a free account.
+2. Create a new project and database.
+3. Copy the connection details:
+   - `DATABASE_URL` (e.g., `jdbc:postgresql://ep-xxx.us-east-2.aws.neon.tech/lead_management?sslmode=require`)
+   - `DATABASE_USERNAME`
+   - `DATABASE_PASSWORD`
+
+### Step 2: Backend (Render)
+
+1. Go to [render.com](https://render.com) and connect your GitHub repo.
+2. Create a **New Web Service** with these settings:
+
+| Setting | Value |
+|---------|-------|
+| Root Directory | `backend` |
+| Runtime | Java |
+| Build Command | `./render-build.sh` |
+| Start Command | `java -jar -Dspring.profiles.active=prod target/lead-management-backend-0.0.1-SNAPSHOT.jar` |
+
+3. Add these **Environment Variables**:
+
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | `jdbc:postgresql://ep-xxx.neon.tech/lead_management?sslmode=require` |
+| `DATABASE_USERNAME` | Your Neon username |
+| `DATABASE_PASSWORD` | Your Neon password |
+| `JWT_SECRET` | A strong base64-encoded secret (min 32 bytes) |
+| `CORS_ALLOWED_ORIGINS` | `https://your-app.vercel.app` |
+| `COOKIE_DOMAIN` | _(leave empty)_ |
+
+4. Deploy. Note the service URL (e.g., `https://your-backend.onrender.com`).
+
+### Step 3: Frontend (Vercel)
+
+1. Go to [vercel.com](https://vercel.com) and import your GitHub repo.
+2. Set the **Root Directory** to `frontend`.
+3. Framework Preset: **Vite**.
+4. Add this **Environment Variable**:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://your-backend.onrender.com/api` |
+
+5. Deploy.
+
+### Step 4: Update CORS
+
+After Vercel gives you the deployment URL (e.g., `https://lead-manager-xyz.vercel.app`):
+- Go back to Render → Environment Variables
+- Update `CORS_ALLOWED_ORIGINS` to your Vercel URL
+- Redeploy the backend
+
+### Generate a JWT Secret
+
+```bash
+openssl rand -base64 64
+```
+
+Use the output as your `JWT_SECRET` environment variable.
